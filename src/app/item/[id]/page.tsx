@@ -3,18 +3,16 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { gql, useMutation, useQuery } from "@apollo/client";
-import { useAuth, useClerk } from "@clerk/nextjs";
+import { useCart } from "@/hooks/use-cart";
+import { gql, useQuery } from "@apollo/client";
 import { usePathname } from "next/navigation";
-import React, { useState } from "react";
+import { useState } from "react";
 
 function page() {
   const [size, setSize] = useState("");
   const [color, setColor] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [insertCartOne] = useMutation(INSERT_CART_ONE);
-  const { isSignedIn, userId } = useAuth();
-  const clerk = useClerk();
+  const { addToCart } = useCart();
 
   const pathname = usePathname();
   const { data } = useQuery(GET_ITEM_BY_ID, {
@@ -23,33 +21,22 @@ function page() {
   const item = data?.item_by_pk;
 
   const handleAddToCart = () => {
-    if (!isSignedIn) {
-      clerk.openSignIn({
-        redirectUrl: pathname,
-      });
-      return;
-    }
-    insertCartOne({
-      variables: {
-        object: {
-          item_id: item.id,
-          item_price: item.price,
-          name: item.name,
-          options: [
-            {
-              name: "color",
-              value: color,
-            },
-            {
-              name: "size",
-              value: size,
-            },
-          ],
-          quantity: quantity,
-          total_amount: item.price * quantity,
-          user_id: userId,
+    addToCart({
+      item_id: item.id,
+      item_price: item.price,
+      name: item.name,
+      options: [
+        {
+          name: "color",
+          value: color,
         },
-      },
+        {
+          name: "size",
+          value: size,
+        },
+      ],
+      quantity: quantity,
+      total_amount: item.price * quantity,
     });
   };
 
@@ -121,13 +108,6 @@ const GET_ITEM_BY_ID = gql`
       size_options
       image
       price
-    }
-  }
-`;
-const INSERT_CART_ONE = gql`
-  mutation InsertCartOne($object: cart_insert_input!) {
-    insert_cart_one(object: $object) {
-      id
     }
   }
 `;
