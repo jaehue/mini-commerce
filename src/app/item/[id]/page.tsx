@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { gql, useMutation, useQuery } from "@apollo/client";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 
@@ -12,6 +13,8 @@ function page() {
   const [color, setColor] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [insertCartOne] = useMutation(INSERT_CART_ONE);
+  const { isSignedIn, userId } = useAuth();
+  const clerk = useClerk();
 
   const pathname = usePathname();
   const { data } = useQuery(GET_ITEM_BY_ID, {
@@ -20,6 +23,12 @@ function page() {
   const item = data?.item_by_pk;
 
   const handleAddToCart = () => {
+    if (!isSignedIn) {
+      clerk.openSignIn({
+        redirectUrl: pathname,
+      });
+      return;
+    }
     insertCartOne({
       variables: {
         object: {
@@ -38,6 +47,7 @@ function page() {
           ],
           quantity: quantity,
           total_amount: item.price * quantity,
+          user_id: userId,
         },
       },
     });
