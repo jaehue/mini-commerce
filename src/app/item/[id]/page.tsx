@@ -8,7 +8,7 @@ import { gql, useQuery } from "@apollo/client";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-function page() {
+export default function Page() {
   const [size, setSize] = useState("");
   const [color, setColor] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -111,5 +111,3 @@ const GET_ITEM_BY_ID = gql`
     }
   }
 `;
-
-export default page;
